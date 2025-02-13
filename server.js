@@ -2149,20 +2149,27 @@ app.post('/assignstudents', (req, res) => {
 });
 
 
-app.get('/assignstudentdetails', (req, res) => {
-    const sql = `
-        SELECT 
-            student1.student_id, 
-            student1.student_name, 
-            evaluator.evaluator_id, 
-            evaluator.evaluator_name,
-            evalassignstud.assignstude_id 
-        FROM evalassignstud
-        JOIN student1 ON evalassignstud.student_id = student1.student_id
-        JOIN evaluator ON evalassignstud.evaluator_id = evaluator.evaluator_id
-    `;
+
+
+app.get(`/assignstudentdetails`, (req, res) => {
+    const evaluatorId = req.query.evaluatorid;  // You should use req.query to get the query parameter
+    console.log("Fetching data for evaluatorId:", evaluatorId);
     
-    con.query(sql, (err, results) => {
+    // Define the SQL query
+    const sql = `SELECT a.assignstude_id, a.evaluator_id, a.student_id, s.student_name, e.evaluator_name
+                 FROM evalassignstud a
+                 JOIN student1 s ON a.student_id = s.student_id
+                 JOIN evaluator e ON a.evaluator_id = e.evaluator_id
+               `; // Placeholder for evaluatorId
+
+    // Format the query by replacing the placeholder with the actual evaluatorId
+    const formattedSql = mysql.format(sql);
+
+    // Log the formatted SQL query
+    console.log("Formatted SQL Query:", formattedSql);
+
+    // Run the query with the parameter
+    con.query(formattedSql, (err, results) => {
         if (err) {
             console.error('Error fetching detailed student assignments:', err);
             return res.status(500).json({ error: 'Internal server error' });
@@ -2170,6 +2177,23 @@ app.get('/assignstudentdetails', (req, res) => {
         res.json(results);
     });
 });
+
+
+app.get('/evaluatorstudentdetails',(req,res)=>{
+   
+    const sql=`SELECT a.assignstude_id, a.evaluator_id, a.student_id, s.student_name, e.evaluator_name
+                 FROM evalassignstud a
+                 JOIN student1 s ON a.student_id = s.student_id
+                 JOIN evaluator e ON a.evaluator_id = e.evaluator_id`
+    con.query(sql,(err,results)=>{
+        if(err){
+            console.error("error getting evaluator assigned student details",err)
+            return res.status(500).json({message:"error getting evaluator assigned student details"})
+        }
+        res.json(results)
+    })
+})
+
 
 app.delete('/deleteassignstudent/:assignstudentid',(req,res)=>{
     const assignstudentId=req.params.assignstudentid;
@@ -2571,4 +2595,5 @@ app.use('/uploads', express.static('uploads'));
 const PORT = process.env.PORT || 3004;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+   // document.write("helllo")
 });

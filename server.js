@@ -24,11 +24,17 @@ app.use(cors());
     database: "storage",
 });
 */
-const con = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+// const con = mysql.createConnection({
+//     host: process.env.DB_HOST,
+//     user: process.env.DB_USER,
+//     password: process.env.DB_PASSWORD,
+//     database: process.env.DB_NAME
+//   });
+  const con = mysql.createConnection({
+    host:"examdatabase.cluk60aaw3od.ap-south-1.rds.amazonaws.com",
+    user: "admin",
+    password:"examroot",
+    database: "railwayexam",
   });
 
 con.connect((err) => {
@@ -2592,7 +2598,12 @@ app.get('/getresultsdetailsbasedonexam/:selectedexam',(req,res)=>{
 
 // Serve uploaded images statically
 app.use('/uploads', express.static('uploads'));
-const PORT = process.env.PORT || 3004;
+// const PORT = process.env.PORT || 3004;
+// app.listen(PORT, () => {
+//     console.log(`Server is running on port ${PORT}`);
+//    // document.write("helllo")
+// });
+const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
    // document.write("helllo")

@@ -24,18 +24,18 @@ app.use(cors());
     database: "storage",
 });
 */
-// const con = mysql.createConnection({
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     password: process.env.DB_PASSWORD,
-//     database: process.env.DB_NAME
-//   });
-  const con = mysql.createConnection({
-    host:"examdatabase.cluk60aaw3od.ap-south-1.rds.amazonaws.com",
-    user: "admin",
-    password:"examroot",
-    database: "railwayexam",
+const con = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
   });
+//   const con = mysql.createConnection({
+//     host:"examdatabase.cluk60aaw3od.ap-south-1.rds.amazonaws.com",
+//     user: "admin",
+//     password:"examroot",
+//     database: "railwayexam",
+//   });
 
 con.connect((err) => {
     if (err) {
@@ -1053,16 +1053,24 @@ app.get('/studentdetail', (req, res) => {
     });
 });
 app.get('/getSubjectName', (req, res) => {
-    const subjectId = req.query.subject_id;
-    const sql = `SELECT subject_name FROM subject WHERE subject_id = ?`;
-    con.query(sql, [subjectId], (err, result) => {
+    const subjectIds = req.query.subject_ids.split(','); // Convert string to array
+    console.log("Received subject IDs:", subjectIds);
+
+    if (!subjectIds.length) {
+        return res.status(400).json({ error: "No subject IDs provided" });
+    }
+
+    const sql = `SELECT subject_id, subject_name FROM subject WHERE subject_id IN (?)`;  
+    con.query(sql, [subjectIds], (err, result) => {
         if (err) {
-            res.send({ error: err });
-        } else {
-            res.send(result);
+            console.error("Error fetching subjects:", err);
+            return res.status(500).json({ error: "Database error" });
         }
+        console.log("Fetched subjects:", result);
+        return res.status(200).json(result);
     });
 });
+
 
 app.post('/dsquestions',(req,res)=>{
     const{subject_id,questiontext,marks,question_type}=req.body;
@@ -2598,13 +2606,9 @@ app.get('/getresultsdetailsbasedonexam/:selectedexam',(req,res)=>{
 
 // Serve uploaded images statically
 app.use('/uploads', express.static('uploads'));
-// const PORT = process.env.PORT || 3004;
-// app.listen(PORT, () => {
-//     console.log(`Server is running on port ${PORT}`);
-//    // document.write("helllo")
-// });
-const PORT = 5000;
+const PORT = process.env.PORT || 3004;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
    // document.write("helllo")
 });
+

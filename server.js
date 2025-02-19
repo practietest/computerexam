@@ -864,7 +864,7 @@ app.post('/startExam', (req, res) => {
     const { studentId, taskId } = req.body;
 
     // Check current status of the exam
-    const checkStatusSql = 'SELECT status FROM EXAM WHERE student_id = ? AND task_id = ?';
+    const checkStatusSql = 'SELECT status FROM exam WHERE student_id = ? AND task_id = ?';
     con.query(checkStatusSql, [studentId, taskId], (err, results) => {
         if (err) {
             console.error("Error checking exam status:", err);
@@ -1052,8 +1052,19 @@ app.get('/studentdetail', (req, res) => {
         return res.status(200).json(result);
     });
 });
+// app.get('/getSubjectname', (req, res) => {
+//     const subjectId = req.query.subject_id;
+//     const sql = `SELECT subject_name FROM subject WHERE subject_id = ?`;
+//     con.query(sql, [subjectId], (err, result) => {
+//         if (err) {
+//             res.send({ error: err });
+//         } else {
+//             res.send(result);
+//         }
+//     });
+// });
 app.get('/getSubjectName', (req, res) => {
-    const subjectIds = req.query.subject_ids.split(','); // Convert string to array
+    const subjectIds = req.query.subject_ids.split(','); 
     console.log("Received subject IDs:", subjectIds);
 
     if (!subjectIds.length) {

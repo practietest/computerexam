@@ -12,6 +12,7 @@ const { Server } = require('http');
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 const uploadDir = path.join(process.cwd(), 'uploads');

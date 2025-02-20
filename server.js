@@ -14,7 +14,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-
+const uploadDir = path.join(process.cwd(), 'uploads');
 
 
 /*const con = mysql.createConnection({
@@ -325,7 +325,8 @@ app.put('/edituser/:userId', (req, res) => {
 */
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+       // cb(null, 'uploads/');
+            cb(null,uploadDir)
     },
     filename: (req, file, cb) => {
         const timestamp = Date.now();
@@ -2618,7 +2619,8 @@ app.get('/getresultsdetailsbasedonexam/:selectedexam',(req,res)=>{
 
 
 // Serve uploaded images statically
-app.use('/uploads', express.static('uploads'));
+//app.use('/uploads', express.static(process));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 const PORT = process.env.PORT || 3004;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

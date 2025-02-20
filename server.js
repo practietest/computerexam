@@ -1099,7 +1099,8 @@ app.post('/dsquestions',(req,res)=>{
 })
 app.get("/subjectquestions/:subjectId", (req, res) => {
     const subjectId = req.params.subjectId;
-    const sql = `SELECT * FROM questions WHERE subject_id = ?`;
+   // const sql = `SELECT * FROM questions WHERE subject_id = ?`;
+   const sql =`select q.*,qt.difficulty_type from questions q join question_type1 qt on q.qtype_id=qt.question_type_id where subject_id=?;`
     con.query(sql, [subjectId], (err, result) => {
         if (err) {
             return res.status(500).send(err);
@@ -1204,7 +1205,8 @@ app.delete(`/deletequestion/:questionId`,(req,res)=>{
 
 app.get(`/theoryquestions/:subjectid`,(req,res)=>{
     const subject_id=req.params.subjectid;
-    const sql="select * from dsquestion where subject_id=?";
+    //const sql="select * from dsquestion where subject_id=?";
+    const sql="select qt.difficulty_type,dsq.dsquestion,dsq_id from dsquestion as dsq join question_type1 as qt on dsq.qtype_id=qt.question_type_id where dsq.subject_id=?;"
     con.query(sql,[subject_id],(err,result)=>{
         if(err){
             console.error("fetching theroy questions error",err);
@@ -1799,7 +1801,7 @@ app.post('/assignExam', (req, res) => {
     const mailOptions = {
         from: 'practicetest3333@gmail.com', // Sender address
         subject: 'Exam Assignment Notification',
-        text: 'You have been assigned an exam. Please follow this link: http://localhost:3000/studentlogin' 
+        text: 'You have been assigned an exam. Please follow this link: http://107.23.64.49:5000/studentlogin' 
     };
 
     // Check for duplicate assignments in the database

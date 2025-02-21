@@ -1803,7 +1803,7 @@ app.post('/assignExam', (req, res) => {
     const mailOptions = {
         from: 'practicetest3333@gmail.com', // Sender address
         subject: 'Exam Assignment Notification',
-        text: 'You have been assigned an exam. Please follow this link: http://107.23.64.49:5000/studentlogin' 
+        text: 'You have been assigned an exam. Please follow this link: http://cbt.digitalcurve.in/studentlogin' 
     };
 
     // Check for duplicate assignments in the database

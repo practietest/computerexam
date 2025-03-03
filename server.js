@@ -51,7 +51,7 @@ const transporter=nodemailer.createTransport({
     
     auth:{
         user: `practicetest3333@gmail.com`,   // Use environment variable
-        pass:`apnb nivv cgvi jonl`   
+        pass:`epar gzfe epch ksjs`   
     }
 })
 

@@ -419,19 +419,42 @@ app.get('/studentdetail/:studentId', (req, res) => {
 });
 
 
-// Endpoint to delete a student by student_id
 app.delete('/deletestudent/:student_id', (req, res) => {
     const student_id = req.params.student_id;
-    const delsql = "DELETE FROM student1 WHERE student_id=?";
-    con.query(delsql, [student_id], (err, result) => {
+
+    // Step 1: Delete related records in `exam`
+    const deleteExamQuery = "DELETE FROM exam WHERE student_id = ?";
+
+    con.query(deleteExamQuery, [student_id], (err, result) => {
         if (err) {
-            console.error("Error deleting student:", err);
-            return res.status(500).json({ message: "Failed to delete student" });
+            console.error("Error deleting related records in exam:", err);
+            return res.status(500).json({ message: "Failed to delete related exam records" });
         }
-        console.log("Student deleted successfully");
-        return res.status(200).json(result);
+
+        // Step 2: Delete related records in `evalassignstud`
+        const deleteEvalQuery = "DELETE FROM evalassignstud WHERE student_id = ?";
+        
+        con.query(deleteEvalQuery, [student_id], (err, result) => {
+            if (err) {
+                console.error("Error deleting related records in evalassignstud:", err);
+                return res.status(500).json({ message: "Failed to delete related evalassignstud records" });
+            }
+
+            // Step 3: Now, delete the student from `student1`
+            const deleteStudentQuery = "DELETE FROM student1 WHERE student_id = ?";
+            con.query(deleteStudentQuery, [student_id], (err, result) => {
+                if (err) {
+                    console.error("Error deleting student:", err);
+                    return res.status(500).json({ message: "Failed to delete student" });
+                }
+                console.log("Student deleted successfully");
+                return res.status(200).json({ message: "Student and all related records deleted successfully" });
+            });
+        });
     });
 });
+
+
 
 // Endpoint to update student details
 app.put('/editstudent/:student_id', upload.single("student_image"), (req, res) => {

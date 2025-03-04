@@ -452,8 +452,8 @@ app.put('/editstudent/:student_id', upload.single("student_image"), (req, res) =
         }
 
         // Update student details
-        let updateSql = `UPDATE student1 SET student_name=?, password=?, email=?, phone_number=?, date_of_birth=?`;
-        const updateValues = [studentname, password, email, phone, birthdate];
+        let updateSql = `UPDATE student1 SET student_name=?, email=?, phone_number=?, date_of_birth=?`;
+        const updateValues = [studentname, email, phone, birthdate];
 
         if (student_image) {
             updateSql += `, student_image=?`;

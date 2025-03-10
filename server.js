@@ -17,26 +17,25 @@ app.use(cors());
 
 const uploadDir = path.join(process.cwd(), 'uploads');
 
+// const con = mysql.createConnection({
+//     host: "localhost",
+//     user: "root",
+//     password: "root",
+//     database: "storage",
+// });
 
-/*const con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "root",
-    database: "storage",
-});
-*/
-const con = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-  });
-//   const con = mysql.createConnection({
-//     host:"examdatabase.cluk60aaw3od.ap-south-1.rds.amazonaws.com",
-//     user: "admin",
-//     password:"examroot",
-//     database: "railwayexam",
+// const con = mysql.createConnection({
+//     host: process.env.DB_HOST,
+//     user: process.env.DB_USER,
+//     password: process.env.DB_PASSWORD,
+//     database: process.env.DB_NAME
 //   });
+  const con = mysql.createConnection({
+    host:"examdatabase.cluk60aaw3od.ap-south-1.rds.amazonaws.com",
+    user: "admin",
+    password:"examroot",
+    database: "railwayexam",
+  });
 
 con.connect((err) => {
     if (err) {
@@ -905,7 +904,7 @@ app.post('/startExam', (req, res) => {
         }
 
         // Update status to attempted
-        const updateStatusSql = 'UPDATE EXAM SET status = ? WHERE student_id = ? AND task_id = ?';
+        const updateStatusSql = 'UPDATE exam SET status = ? WHERE student_id = ? AND task_id = ?';
         con.query(updateStatusSql, ['attempted', studentId, taskId], (err) => {
             if (err) {
                 console.error("Error updating exam status:", err);

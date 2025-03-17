@@ -17,25 +17,25 @@ app.use(cors());
 
 const uploadDir = path.join(process.cwd(), 'uploads');
 
-// const con = mysql.createConnection({
-//     host: "localhost",
-//     user: "root",
-//     password: "root",
-//     database: "storage",
-// });
-
+const con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "root",
+    database: "storage",
+});
+   
 // const con = mysql.createConnection({
 //     host: process.env.DB_HOST,
 //     user: process.env.DB_USER,
 //     password: process.env.DB_PASSWORD,
 //     database: process.env.DB_NAME
 //   });
-  const con = mysql.createConnection({
-    host:"examdatabase.cluk60aaw3od.ap-south-1.rds.amazonaws.com",
-    user: "admin",
-    password:"examroot",
-    database: "railwayexam",
-  });
+//   const con = mysql.createConnection({
+//     host:"examdatabase.cluk60aaw3od.ap-south-1.rds.amazonaws.com",
+//     user: "admin",
+//     password:"examroot",
+//     database: "railwayexam",
+//   });
 
 con.connect((err) => {
     if (err) {
@@ -2132,72 +2132,194 @@ app.post('/assignstudents', (req, res) => {
 
 */
 
-app.post('/assignstudents', (req, res) => {
-    const { evaluator_id, student_ids, examName } = req.body;
+// app.post('/assignstudents', async (req, res) => {
+//     const selectedStudents = req.body.selectstudents; 
+//     const evaluatorId = req.body.evaluator_id;
+//     console.log(selectedStudents,"yes selectedstudents") 
 
-    // Check if all required conditions are met
-    if (!(evaluator_id && student_ids && Array.isArray(student_ids))) {
-        return res.status(400).json({ message: 'Invalid input' });
+//     selectedStudents.forEach((student) => {
+//       //
+//       con.query(
+//         'SELECT * FROM evalassignstud WHERE student_id = ? AND exam_name = ?',
+//         [student.student_id, student.exa_name],
+//         (err, results) => {
+//           if (err) {
+//             console.error('Error checking existing record:', err);
+//             return res.status(500).json({ message: 'An error occurred while checking for existing records.' });
+//           }
+  
+//           // If a record already exists, inform the user
+//           if (results.length > 0) {
+//             return res.json({
+//               message: `Student ID ${student.student_id} is already assigned to ${student.exa_name}.`,
+//             });
+//           } else {
+//             // If no record exists, insert the new record into the database
+//             con.query(
+//               'INSERT INTO evalassignstud (evaluator_id, student_id, exam_name) VALUES (?, ?, ?)',
+//               [evaluatorId, student.student_id, student.exa_name],
+//               (insertErr, insertResult) => {
+//                 if (insertErr) {
+//                   console.error('Error inserting record:', insertErr);
+//                   return res.status(500).json({ message: 'An error occurred while inserting the record.' });
+//                 }
+  
+//                 // Log successful insertion
+//                 console.log(`New record inserted for Student ID ${student.student_id} and Exam ${student.exa_name}.`);
+//               }
+//             );
+//           }
+//         }
+//       );
+//     });
+  
+//     // Send a success message after processing all students
+//     res.json({ message: 'Exams successfully assigned to selected students.' });
+//   });
+app.post('/assignstudents', async (req, res) => {
+    const selectedStudents = req.body.selectstudents; 
+    const evaluator_id = req.body.evaluator_id;
+
+    console.log(evaluator_id, "yesloggin");
+    console.log(selectedStudents, "yes selectedstudents"); 
+
+    if (!Array.isArray(selectedStudents) || selectedStudents.length === 0) {
+        return res.status(400).json({ message: "Invalid students data" });
     }
 
-    // Begin transaction
-    con.beginTransaction(err => {
-        if (err) {
-            return res.status(500).json({ message: 'Transaction error', error: err });
-        }
+    try {
+        let insertPromises = [];
 
-        // Prepare SQL query to check for duplicates
-        const duplicateCheckQuery = `
-            SELECT COUNT(*) AS count 
-            FROM evalassignstud 
-            WHERE evaluator_id = ? AND student_id IN (?) AND exam_name = ?
-        `;
+        for (const student of selectedStudents) {
+            const { student_id, exa_name } = student;
+            console.log(student_id, exa_name, "hoooo");
 
-        // Execute duplicate check
-        con.query(duplicateCheckQuery, [evaluator_id, student_ids, examName], (error, results) => {
-            if (error) {
-                return con.rollback(() => {
-                    console.error('Error checking for duplicates:', error);
-                    res.status(500).json({ message: 'Database error', error });
-                });
-            }
-
-            // Check if any duplicate entries exist
-            const count = results[0].count;
-            if (count > 0) {
-                return con.rollback(() => {
-                    return res.status(409).json({ message: 'Students already assigned to this evaluator for the same exam.' });
-                });
-            }
-
-            // Prepare SQL query for insertion
-            const insertQuery = 'INSERT INTO evalassignstud (evaluator_id, student_id, exam_name) VALUES ?';
-            const values = student_ids.map(student_Id => [evaluator_id, student_Id, examName]);
-
-            // Execute insertion
-            con.query(insertQuery, [values], (error, results) => {
-                if (error) {
-                    return con.rollback(() => {
-                        console.error('Error inserting data:', error);
-                        res.status(500).json({ message: 'Database error', error });
-                    });
-                }
-
-                // Commit transaction
-                con.commit(err => {
-                    if (err) {
-                        return con.rollback(() => {
-                            console.error('Transaction commit error:', err);
-                            res.status(500).json({ message: 'Failed to assign students', error: err });
-                        });
+            // Convert queries into Promises
+            let checkAssignment = new Promise((resolve, reject) => {
+                con.query(
+                    `SELECT * FROM evalassignstud WHERE student_id = ? AND exam_name = ? AND evaluator_id = ?`,
+                    [student_id, exa_name, evaluator_id],
+                    (err, results) => {
+                        if (err) {
+                            return reject("Error checking duplicate assignments");
+                        }
+                        if (results.length > 0) {
+                            console.log(`Student ID ${student_id} already assigned for exam ${exa_name}`);
+                            return resolve({ message: `Student ID ${student_id} already assigned for exam ${exa_name}`, duplicate: true });
+                        }
+                        resolve({ duplicate: false });
                     }
+                );
+            });
 
-                    res.status(200).json({ message: 'Students assigned successfully' });
+            let insertAssignment = checkAssignment.then((result) => {
+                if (result.duplicate) return result; // Skip insert if duplicate
+                return new Promise((resolve, reject) => {
+                    con.query(
+                        `INSERT INTO evalassignstud (evaluator_id, student_id, exam_name) VALUES (?, ?, ?)`,
+                        [evaluator_id, student_id, exa_name],
+                        (err, results) => {
+                            if (err) {
+                                return reject("Error inserting assignment");
+                            }
+                            resolve(results);
+                        }
+                    );
                 });
             });
-        });
-    });
+
+            insertPromises.push(insertAssignment); 
+        }
+
+        // Wait for all assignments to be processed
+        let results = await Promise.all(insertPromises);
+
+        // Check if there are duplicate records
+        let duplicateRecords = results.filter(result => result.duplicate);
+        if (duplicateRecords.length > 0) {
+            return res.status(400).json({ message: "Some students were already assigned", duplicates: duplicateRecords });
+        }
+
+        res.status(200).json({ message: "Students assigned successfully" });
+
+    } catch (error) {
+        console.error("Database error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
 });
+
+
+
+
+
+// app.post('/assignstudents', (req, res) => {
+//     const selectedStudents = req.body.selectstudents; 
+//     const evaluator_id = req.body.evaluator_id;
+//    console.log(selectedStudents,"yes selectedstudents") 
+
+//     // Check if all required conditions are met
+//     // if (!(evaluator_id && student_ids && Array.isArray(student_ids))) {
+//     //     return res.status(400).json({ message: 'Invalid input' });
+//     // }
+
+//     // Begin transaction
+//     con.beginTransaction(err => {
+//         if (err) {
+//             return res.status(500).json({ message: 'Transaction error', error: err });
+//         }
+
+//         // Prepare SQL query to check for duplicates
+//         const duplicateCheckQuery = `
+//             SELECT COUNT(*) AS count 
+//             FROM evalassignstud 
+//             WHERE evaluator_id = ? AND student_id IN (?) AND exam_name = ?
+//         `;
+
+//         // Execute duplicate check
+//         con.query(duplicateCheckQuery, [evaluator_id, student_ids, examName], (error, results) => {
+//             if (error) {
+//                 return con.rollback(() => {
+//                     console.error('Error checking for duplicates:', error);
+//                     res.status(500).json({ message: 'Database error', error });
+//                 });
+//             }
+
+//             // Check if any duplicate entries exist
+//             const count = results[0].count;
+//             if (count > 0) {
+//                 return con.rollback(() => {
+//                     return res.status(409).json({ message: 'Students already assigned to this evaluator for the same exam.' });
+//                 });
+//             }
+
+//             // Prepare SQL query for insertion
+//             const insertQuery = 'INSERT INTO evalassignstud (evaluator_id, student_id, exam_name) VALUES ?';
+//             const values = student_ids.map(student_Id => [evaluator_id, student_Id, examName]);
+
+//             // Execute insertion
+//             con.query(insertQuery, [values], (error, results) => {
+//                 if (error) {
+//                     return con.rollback(() => {
+//                         console.error('Error inserting data:', error);
+//                         res.status(500).json({ message: 'Database error', error });
+//                     });
+//                 }
+
+//                 // Commit transaction
+//                 con.commit(err => {
+//                     if (err) {
+//                         return con.rollback(() => {
+//                             console.error('Transaction commit error:', err);
+//                             res.status(500).json({ message: 'Failed to assign students', error: err });
+//                         });
+//                     }
+
+//                     res.status(200).json({ message: 'Students assigned successfully' });
+//                 });
+//             });
+//         });
+//     });
+// });
 
 
 
@@ -2207,7 +2329,7 @@ app.get(`/assignstudentdetails`, (req, res) => {
     console.log("Fetching data for evaluatorId:", evaluatorId);
     
     // Define the SQL query
-    const sql = `SELECT a.assignstude_id, a.evaluator_id, a.student_id, s.student_name, e.evaluator_name
+    const sql = `SELECT a.assignstude_id, a.evaluator_id, a.student_id, s.student_name, e.evaluator_name,a.exam_name 
                  FROM evalassignstud a
                  JOIN student1 s ON a.student_id = s.student_id
                  JOIN evaluator e ON a.evaluator_id = e.evaluator_id
@@ -2596,6 +2718,20 @@ app.get('/gettingpadfurl/:studentId/:examname', (req, res) => {
         }
     });
 });
+
+app.get(`/evaluationdescriptivemarks/:examname/:studentid`,(req,res)=>{
+    const{examname,studentid}=req.params;
+    console.log(examname,studentid,"yeshellloppppp")
+    const sql=`select descriptiveMarks from exam_results where studentId =? and examname=?`
+    con.query(sql,[studentid,examname],(err,results)=>{
+        if(err){
+            console.error("error getting descriptive marks in evaluatorpannel",err)
+            return res.status(500).json({message:"error getting descriptive marks in evaluatorpannel"})
+        }
+        console.log("sucessfully getting descripitvemarks in evaluator pannel")
+        return res.status(200).json(results)
+    })
+})
 
 app.post('/submit-evaluation', upload.single('evaluatedPaper'), (req, res) => {
     const { totalmarks, examname, studentid, status, submissiontime,updatedQuestions } = req.body;

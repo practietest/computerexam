@@ -2537,7 +2537,7 @@ app.get('/students-for-evaluator/:evaluatorId', async (req, res) => {
             SELECT s.student_id, s.student_name, s.email, s.phone_number, s.date_of_birth, s.student_image,a.exa_name
             FROM student1 s
             JOIN exam e ON s.student_id = e.student_id
-            JOIN atask1 a ON e.task_id = a.task_id
+            JOIN Atask1 a ON e.task_id = a.task_id
             WHERE a.subject_id = (SELECT evaluator_subject FROM evaluator WHERE evaluator_id = ?)
             AND e.status = 'attempted';
         `;

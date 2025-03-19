@@ -17,19 +17,19 @@ app.use(cors());
 
 const uploadDir = path.join(process.cwd(), 'uploads');
 
-// const con = mysql.createConnection({
-//     host: "localhost",
-//     user: "root",
-//     password: "root",
-//     database: "storage",
-// });
-   
 const con = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-  });
+    host: "localhost",
+    user: "root",
+    password: "root",
+    database: "storage",
+});
+   
+// const con = mysql.createConnection({
+//     host: process.env.DB_HOST,
+//     user: process.env.DB_USER,
+//     password: process.env.DB_PASSWORD,
+//     database: process.env.DB_NAME
+//   });
 //   const con = mysql.createConnection({
 //     host:"examdatabase.cluk60aaw3od.ap-south-1.rds.amazonaws.com",
 //     user: "admin",
@@ -2579,7 +2579,7 @@ app.get('/evaluatorassignedcandidatelist/:evaluatorId', (req, res) => {
             return res.status(500).json({ error: 'Database error' });
         }
 
-        const uploadCount = students.length;
+        const uploadCount = students.filter(item=>item.evaluatedpaper!==null && item.status==='Approved').length
         const evaluatedCount = students.filter(student => student.status === 'Approved').length;
 
         res.json({
@@ -2610,7 +2610,18 @@ app.get('/correctionpaper/:studentId/:examname', (req, res) => {
     });
 });
 
-
+app.get('/evaluatedsheetcounts',(req,res)=>{
+    const sql=`select * from scanned_documents1`;
+    con.query(sql,(err,results)=>{
+        if(err){
+            console.error("Error occured while getting the descriptve answer sheet",err)
+            return res.status(500).json({message:"error getting the descripitve answer sheet"});
+        }
+        console.log("Successfully getting evaluated answer sheet details");
+        const uploadSheets = results.length;
+        return res.status(200).json({results,uploadSheets});
+    })
+})
 
 app.get('/Evaluatedsheetdetails', (req, res) => {
     const sql = "SELECT * FROM evalassignstud";
